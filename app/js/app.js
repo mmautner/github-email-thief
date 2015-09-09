@@ -151,4 +151,6 @@ app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state', '$rootScope'
     $rootScope.isLoggedIn = false;
     $state.go('home');
   });
+
+  FastClick.attach(document.body);
 }]);
