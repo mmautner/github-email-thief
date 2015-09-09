@@ -1,3 +1,7 @@
 <div>
-  {{response}}
+  <table class="table">
+    <tr ng-repeat="item in response.threads">
+      <td>{{item.snippet}}</td>
+    </tr>
+  </table>
 </div>

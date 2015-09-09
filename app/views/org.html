@@ -1,5 +1,5 @@
 <ul>
   <li ng-repeat="org in orgs">
-    {{org}}
+    <a ui-sref="org({org: org.login})">{{org.login}}</a>
   </li>
 </ul>

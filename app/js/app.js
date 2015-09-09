@@ -14,7 +14,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
     $stateProvider
       .state('base', {
         abstract: true,
-        templateUrl: '/views/base.html'
+        templateUrl: '/views/base.html',
+        controller: 'BaseCtrl'
       })
       .state('home', {
         url: "/",
@@ -34,10 +35,16 @@ app.config(['$stateProvider', '$urlRouterProvider',
         templateUrl: "views/terms.html"
       })
       .state('orgs', {
-        url: "/org/:org",
+        url: "/org",
         parent: 'base',
         templateUrl: "views/org.html",
         controller: "OrgCtrl"
+      })
+      .state('org', {
+        url: "/org/:org",
+        parent: 'base',
+        templateUrl: "views/org-detail.html",
+        controller: "OrgDetailCtrl"
       })
       .state('repos', {
         url: "/repos",
@@ -55,6 +62,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 ]);
 
 
+/** services **/
 app.service('Orgs', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/organizations');
 }]);
@@ -71,18 +79,43 @@ app.service('Commit', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) 
   return $resource(BaseGHUrl + '/repos/:owner/:repo/commits/:sha');
 }]);
 
-app.controller('HomeCtrl', ['$scope', '$state', 'GAuth', function($scope, $state, GAuth) {
-  $scope.doSignup = function() {
+
+/** controllers **/
+app.controller('BaseCtrl', ['GAuth', 'GApi', '$rootScope', '$state',
+  function(GAuth, GApi, $rootScope, $state) {
+
+  GAuth.checkAuth().then(function () {
+    $rootScope.isLoggedIn = true;
+  }, function() {
+    $rootScope.isLoggedIn = false;
+  });
+
+  $rootScope.signOut = function() {
+    GAuth.logout().then(function() {
+      $rootScope.isLoggedIn = false;
+      $state.go('home');
+    });
+  };
+
+  $rootScope.doSignup = function() {
     GAuth.login().then(function(){
       $state.go('inbox');
     }, function() {
       console.log('login fail');
     });
   };
+
+}]);
+app.controller('HomeCtrl', ['$scope', '$state', 'GAuth', function($scope, $state, GAuth) {
 }]);
 app.controller('OrgCtrl', ['$scope', '$stateParams', 'Orgs',
   function($scope, $stateParams, Orgs) {
   $scope.orgs = Orgs.query();
+}]);
+app.controller('OrgDetailCtrl', ['$scope', '$stateParams', 'Org',
+  function($scope, $stateParams, Org) {
+
+  $scope.org = Org.get({org: $stateParams.org});
 }]);
 app.controller('RepoCtrl', ['$scope', '$stateParams', 'Repo',
   function($scope, $stateParams, Repo) {
@@ -97,7 +130,6 @@ app.controller('InboxCtrl', ['$scope', '$stateParams', 'GApi',
 
   GApi.executeAuth('gmail', 'users.threads.list', {userId: 'me'})
   .then(function(resp) {
-    console.log(resp);
     $scope.response = resp;
   }, function(data) {
     console.log("error :(");
@@ -106,15 +138,17 @@ app.controller('InboxCtrl', ['$scope', '$stateParams', 'GApi',
 
 }]);
 
-app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state',
-  function(GAuth, GApi, GmailScope, GoogleClientId, $state) {
+app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state', '$rootScope',
+  function(GAuth, GApi, GmailScope, GoogleClientId, $state, $rootScope) {
 
   GApi.load('gmail', 'v1');
   GAuth.setScope(GmailScope);
   GAuth.setClient(GoogleClientId);
   GAuth.checkAuth().then(function () {
+    $rootScope.isLoggedIn = true;
     $state.go('inbox');
   }, function() {
+    $rootScope.isLoggedIn = false;
     $state.go('home');
   });
 }]);
