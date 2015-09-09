@@ -4,7 +4,9 @@ var app = angular.module('ghjobs', [
   'angular-google-gapi'
 ]);
 
-app.constant('BaseGHUrl', 'https://api.github.com')
+app.constant('BaseGHUrl', 'https://api.github.com');
+app.constant('GmailScope', 'https://mail.google.com/');
+app.constant('GoogleClientId', __env.GOOGLE_CLIENT_ID);
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
@@ -19,6 +21,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
         parent: 'base',
         templateUrl: "views/home.html",
         controller: "HomeCtrl"
+      })
+      .state('inbox', {
+        url: '/inbox',
+        parent: 'base',
+        templateUrl: "views/inbox.html",
+        controller: "InboxCtrl"
       })
       .state('terms', {
         url: "/terms",
@@ -63,7 +71,15 @@ app.service('Commit', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) 
   return $resource(BaseGHUrl + '/repos/:owner/:repo/commits/:sha');
 }]);
 
-app.controller('HomeCtrl', function(){});
+app.controller('HomeCtrl', ['$scope', '$state', 'GAuth', function($scope, $state, GAuth) {
+  $scope.doSignup = function() {
+    GAuth.login().then(function(){
+      $state.go('inbox');
+    }, function() {
+      console.log('login fail');
+    });
+  };
+}]);
 app.controller('OrgCtrl', ['$scope', '$stateParams', 'Orgs',
   function($scope, $stateParams, Orgs) {
   $scope.orgs = Orgs.query();
@@ -75,4 +91,30 @@ app.controller('RepoCtrl', ['$scope', '$stateParams', 'Repo',
 app.controller('EventCtrl', ['$scope', '$stateParams', 'Event',
   function($scope, $stateParams, Event) {
   $scope.events = Event.query();
+}]);
+app.controller('InboxCtrl', ['$scope', '$stateParams', 'GApi',
+  function($scope, $stateParams, GApi) {
+
+  GApi.executeAuth('gmail', 'users.threads.list', {userId: 'me'})
+  .then(function(resp) {
+    console.log(resp);
+    $scope.response = resp;
+  }, function(data) {
+    console.log("error :(");
+    $scope.response = data;
+  });
+
+}]);
+
+app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state',
+  function(GAuth, GApi, GmailScope, GoogleClientId, $state) {
+
+  GApi.load('gmail', 'v1');
+  GAuth.setScope(GmailScope);
+  GAuth.setClient(GoogleClientId);
+  GAuth.checkAuth().then(function () {
+    $state.go('inbox');
+  }, function() {
+    $state.go('home');
+  });
 }]);
