@@ -1,3 +1,8 @@
+dependencies:
+  pre:
+    - npm install
+    - bower install -f
+
 test:
   override:
     - >
