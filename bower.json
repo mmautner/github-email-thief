@@ -1,0 +1,25 @@
+{
+  "name": "scratch",
+  "version": "0.0.0",
+  "authors": [
+    "Max Mautner <max.mautner@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/lib/bower",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "gh3": "~1.0.3",
+    "angular": "~1.4.5",
+    "angular-ui-router": "~0.2.15",
+    "angular-resource": "~1.4.5",
+    "bootstrap": "~3.3.5",
+    "font-awesome": "~4.4.0",
+    "angular-google-gapi": "~0.1.3"
+  }
+}
