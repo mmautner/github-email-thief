@@ -1,0 +1,16 @@
+test:
+  override:
+    - >
+      echo 'No tests.'
+
+deployment:
+  staging:
+    branch: staging
+    commands:
+      - npm install -g divshot-cli
+      - divshot push staging --token $DIVSHOT_TOKEN
+  production:
+    branch: master
+    commands:
+      - npm install -g divshot-cli
+      - divshot push production --token $DIVSHOT_TOKEN
