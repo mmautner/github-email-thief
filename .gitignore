@@ -1,3 +1,4 @@
 .divshot-cache
 app/bower
 .env.json
+*.swp

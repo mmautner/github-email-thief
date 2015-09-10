@@ -1,12 +1,39 @@
 var app = angular.module('ghjobs', [
   'ui.router',
   'ngResource',
-  'angular-google-gapi'
+  'angular-google-gapi',
+  'LocalStorageModule'
 ]);
 
 app.constant('BaseGHUrl', 'https://api.github.com');
 app.constant('GmailScope', 'https://mail.google.com/');
 app.constant('GoogleClientId', __env.GOOGLE_CLIENT_ID);
+app.constant('PopularLanguages', [
+  'C',
+  'C#',
+  'C++',
+  'Clojure',
+  'CoffeeScript',
+  'CSS',
+  'Go',
+  'Haskell',
+  'HTML',
+  'Java',
+  'JavaScript',
+  'Lua',
+  'Matlab',
+  'Objective-C',
+  'Perl',
+  'PHP',
+  'Python',
+  'R',
+  'Ruby',
+  'Scala',
+  'Shell',
+  'Swift',
+  'TeX',
+  'VimL',
+]);
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
@@ -106,7 +133,16 @@ app.controller('BaseCtrl', ['GAuth', 'GApi', '$rootScope', '$state',
   };
 
 }]);
-app.controller('HomeCtrl', ['$scope', '$state', 'GAuth', function($scope, $state, GAuth) {
+app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'Repo',
+  function($scope, $state, PopularLanguages, Repo) {
+
+  $scope.languages = PopularLanguages;
+  $scope.loadResults = function() {
+    Repo.get({q: "language="+$scope.selected}, function(data) {
+  t    console.log(data);
+      $scope.items = data.items;
+    });
+  }
 }]);
 app.controller('OrgCtrl', ['$scope', '$stateParams', 'Orgs',
   function($scope, $stateParams, Orgs) {
@@ -144,6 +180,7 @@ app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state', '$rootScope'
   GApi.load('gmail', 'v1');
   GAuth.setScope(GmailScope);
   GAuth.setClient(GoogleClientId);
+  /*
   GAuth.checkAuth().then(function () {
     $rootScope.isLoggedIn = true;
     $state.go('inbox');
@@ -151,6 +188,7 @@ app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state', '$rootScope'
     $rootScope.isLoggedIn = false;
     $state.go('home');
   });
+  */
 
   FastClick.attach(document.body);
 }]);

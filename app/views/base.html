@@ -1,4 +1,4 @@
-<header class="navbar navbar-static-top">
+<header class="navbar navbar-default navbar-static-top">
   <div class="container">
     <div class="navbar-header">
       <button class="navbar-toggle collapsed needsclick"
@@ -20,10 +20,7 @@
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
-        <li ng-show="isLoggedIn">
-          <a href="#" ng-click="signOut()">Logout</a>
-        </li>
-        <li ng-show="!isLoggedIn">
+        <li>
           <a href="#" ng-click="doSignup()">Login</a>
         </li>
       </ul>
@@ -33,7 +30,8 @@
 <div class="container">
   <div ui-view></div>
 </div>
-<footer class="text-center">
-  <hr>
-  <span>Copyright 2015, ScripterMail</span>
+<footer class="footer text-center">
+  <div class="container">
+    <p class="text-muted">Copyright 2015 ScripterMail - <a ui-sref="terms">Terms & Conditions</a></p>
+  </div>
 </footer>
