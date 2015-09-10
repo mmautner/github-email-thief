@@ -139,7 +139,7 @@ app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'Repo',
   $scope.languages = PopularLanguages;
   $scope.loadResults = function() {
     Repo.get({q: "language="+$scope.selected}, function(data) {
-  t    console.log(data);
+      console.log(data);
       $scope.items = data.items;
     });
   }
