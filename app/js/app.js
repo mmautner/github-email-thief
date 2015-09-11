@@ -194,8 +194,9 @@ app.controller('SearchCtrl', ['$scope', '$state', '$stateParams', 'PopularLangua
       $scope.authors = uniqueEmails(data);
       $modal.open({
         scope: $scope,
-        placement: 'center',
         show: true,
+        size: 'lg',
+        windowClass: 'app-modal-window',
         templateUrl: 'views/result-modal.html'
       });
     });
