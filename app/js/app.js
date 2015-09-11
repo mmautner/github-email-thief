@@ -1,5 +1,6 @@
 var app = angular.module('ghjobs', [
   'ui.router',
+  'ui.bootstrap',
   'ngResource',
   'angular-google-gapi',
   'LocalStorageModule'
@@ -9,28 +10,28 @@ app.constant('BaseGHUrl', 'https://api.github.com');
 app.constant('GmailScope', 'https://mail.google.com/');
 app.constant('GoogleClientId', __env.GOOGLE_CLIENT_ID);
 app.constant('PopularLanguages', [
+  'JavaScript',
+  'Python',
+  'Java',
+  'Ruby',
+  'Scala',
+  'Swift',
+  'Objective-C',
   'C',
+  'PHP',
   'C#',
+  'Go',
   'C++',
   'Clojure',
   'CoffeeScript',
   'CSS',
-  'Go',
   'Haskell',
   'HTML',
-  'Java',
-  'JavaScript',
   'Lua',
   'Matlab',
-  'Objective-C',
   'Perl',
-  'PHP',
-  'Python',
   'R',
-  'Ruby',
-  'Scala',
   'Shell',
-  'Swift',
   'TeX',
   'VimL',
 ]);
@@ -49,6 +50,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
         parent: 'base',
         templateUrl: "views/home.html",
         controller: "HomeCtrl"
+      })
+      .state('search', {
+        url: "/search/:language",
+        parent: 'base',
+        templateUrl: "views/search.html",
+        controller: "SearchCtrl"
       })
       .state('inbox', {
         url: '/inbox',
@@ -97,6 +104,9 @@ app.service('Org', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/orgs/:org');
 }]);
 app.service('Repo', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
+  return $resource(BaseGHUrl + '/repos/:owner/:repo/:commits');
+}]);
+app.service('RepoSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/search/repositories');
 }]);
 app.service('Event', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
@@ -133,16 +143,63 @@ app.controller('BaseCtrl', ['GAuth', 'GApi', '$rootScope', '$state',
   };
 
 }]);
-app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'Repo',
-  function($scope, $state, PopularLanguages, Repo) {
+app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'RepoSearch',
+  function($scope, $state, PopularLanguages, RepoSearch) {
 
   $scope.languages = PopularLanguages;
-  $scope.loadResults = function() {
-    Repo.get({q: "language="+$scope.selected}, function(data) {
-      console.log(data);
+  $scope.goToSearch = function(lang) {
+    $state.go('search', {language: lang});
+  };
+}]);
+app.controller('SearchCtrl', ['$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'Repo', '$modal',
+  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, Repo, $modal) {
+  
+  $scope.languages = PopularLanguages;
+  $scope.selectedLanguage = $stateParams.language;
+
+  $scope.refreshSearch = function() {
+    $scope.loaded = false;
+    $scope.dynamic = 0;
+    RepoSearch.get({q: "language="+$scope.selectedLanguage}, function(data) {
+      $scope.loaded = true;
       $scope.items = data.items;
     });
-  }
+    // increment progress bar 19% every .5s, stopping at <100
+    $scope.dynamic = 10;
+  };
+
+  $scope.refreshSearch();
+
+  var uniqueEmails = function(results) {
+    var s = new Set();
+    for (var i = 0; i < results.length; i++) {
+      var login = results[i].committer ? results[i].committer.login : null;
+      var name = results[i].commit.committer ? results[i].commit.committer.name : null;
+      var email = results[i].commit.committer ? results[i].commit.committer.email : null;
+      s.add(JSON.stringify({
+        login: login,
+        name: name,
+        email: email
+      }));
+    }
+    var x = [];
+    for (item of s) {
+      x.push(JSON.parse(item));
+    };
+    return x;
+  };
+
+  $scope.searchEmail = function(owner, repo) {
+    Repo.query({owner: owner, repo: repo, commits: 'commits'}, function(data) {
+      $scope.authors = uniqueEmails(data);
+      $modal.open({
+        scope: $scope,
+        placement: 'center',
+        show: true,
+        templateUrl: 'views/result-modal.html'
+      });
+    });
+  };
 }]);
 app.controller('OrgCtrl', ['$scope', '$stateParams', 'Orgs',
   function($scope, $stateParams, Orgs) {
@@ -153,9 +210,9 @@ app.controller('OrgDetailCtrl', ['$scope', '$stateParams', 'Org',
 
   $scope.org = Org.get({org: $stateParams.org});
 }]);
-app.controller('RepoCtrl', ['$scope', '$stateParams', 'Repo',
-  function($scope, $stateParams, Repo) {
-  $scope.repos = Repo.get({q: "language=python"});
+app.controller('RepoCtrl', ['$scope', '$stateParams', 'RepoSearch',
+  function($scope, $stateParams, RepoSearch) {
+  $scope.repos = RepoSearch.get({q: "language=python"});
 }]);
 app.controller('EventCtrl', ['$scope', '$stateParams', 'Event',
   function($scope, $stateParams, Event) {

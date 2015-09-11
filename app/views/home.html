@@ -8,27 +8,11 @@
       <h3>Pick a programming language:</h3>
       <div class="form-group">
         <select
+          style="width: 160px; font-size: 1.5em;"
           ng-options="value for value in languages"
-          ng-model="selectedLanguage">
+          ng-model="selectedLanguage"
+          ng-change="goToSearch(selectedLanguage)">
         </select>
-      </div>
-      <div class="form-group"
-        ng-show="selectedLanguage"
-        ng-change="loadResuls()"
-        ng-model="selectedType">
-        <h3>Find prospects by:</h3>
-        <label class="checkbox-inline">
-          <input type="checkbox" ng-model="formData.people"> People
-        </label>
-        <label class="checkbox-inline">
-          <input type="checkbox" ng-model="formData.org"> Organizations
-        </label>
-        <label class="checkbox-inline">
-          <input type="checkbox" ng-model="formData.repos"> Repositories
-        </label>
-        <label class="checkbox-inline">
-          <input type="checkbox" ng-model="formData.events"> Events
-        </label>
       </div>
       <!--
       <button class="btn btn-info btn-lg"

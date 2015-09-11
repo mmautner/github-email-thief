@@ -1,0 +1,57 @@
+<div class="row">
+  <div class="col-lg-12">
+    <h3>Pick a programming language:</h3>
+    <div class="form-group">
+      <select
+        style="width: 160px; font-size: 1.5em;"
+        ng-options="value for value in languages"
+        ng-change="refreshSearch()"
+        ng-model="selectedLanguage">
+      </select>
+    </div>
+    <div ng-show="!loaded">
+      <progressbar value="dynamic"></progressbar>
+    </div>
+    <div class="form-group"
+      ng-show="selectedLanguage && loaded"
+      ng-change="loadResuls()"
+      ng-model="selectedType">
+      <h3>Find prospects by:</h3>
+      <label class="radio-inline">
+        <input type="radio" ng-value="true" ng-change="refreshSearch()" ng-model="formData.people"> People
+      </label>
+      <label class="radio-inline">
+        <input type="radio" ng-value="false" ng-change="refreshSearch()" ng-model="formData.org"> Organizations
+      </label>
+      <label class="radio-inline">
+        <input type="radio" ng-value="false" ng-change="refreshSearch()" ng-model="formData.repos"> Repositories
+      </label>
+      <label class="radio-inline">
+        <input type="radio" ng-value="false" ng-change="refreshSearch()" ng-model="formData.events"> Events
+      </label>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-lg-12">
+    <table class="table table-bordered table-hover table-condensed">
+      <thead>
+        <tr>
+          <th>Repo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="item in items">
+          <td>{{item.full_name}}</td>
+          <td>
+            <button
+              class="btn btn-info"
+              ng-click="searchEmail(item.owner.login, item.name)">
+              Identify Email
+            </button>
+          </td>
+        </tr>
+      </tbody>
+  </div>
+</div>
