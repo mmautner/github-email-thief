@@ -1,6 +1,6 @@
 {
   "name": "ghjobs-ui",
-  "root": "app",
+  "root": "dist",
   "clean_urls": true,
   "error_page": "error.html"
 }
