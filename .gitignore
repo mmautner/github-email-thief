@@ -2,3 +2,5 @@
 app/bower
 .env.json
 *.swp
+node_modules/
+dist/
