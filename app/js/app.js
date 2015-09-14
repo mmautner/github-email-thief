@@ -37,6 +37,10 @@ app.constant('PopularLanguages', [
   'VimL',
 ]);
 
+app.config(['$locationProvider', function($locationProvider) {
+  $locationProvider.html5Mode(true);
+}]);
+
 app.config(['growlProvider', function(growlProvider) {
   growlProvider.globalTimeToLive({
     success: 1000,
@@ -100,6 +104,34 @@ app.service('Commit', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) 
   return $resource(BaseGHUrl + '/repos/:owner/:repo/commits/:sha');
 }]);
 
+app.service('Bookmark', ['localStorageService', function(localStorage) {
+  var userBookmarksKey = 'bookmarkedUsers';
+
+  var addBookmark = function(data) {
+    var bookmarks = localStorage.get(userBookmarksKey);
+    if (!bookmarks) {
+      bookmarks = '{}';
+    }
+    bookmarks = angular.fromJson(bookmarks);
+    bookmarks[data.email] = data;
+
+    var newBookmarks = angular.toJson(bookmarks);
+    localStorage.set(userBookmarksKey, newBookmarks);
+    return data;
+  };
+  var getBookmarks = function() {
+    var bookmarks = localStorage.get(userBookmarksKey);
+    if (!bookmarks) {
+      bookmarks = '{}';
+    }
+    return angular.fromJson(bookmarks);
+  };
+  return {
+    addBookmark: addBookmark,
+    getBookmarks: getBookmarks
+  }
+}]);
+
 
 /** controllers **/
 app.controller('BaseCtrl', ['GAuth', 'GApi', '$rootScope', '$state',
@@ -136,8 +168,8 @@ app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'RepoSearch'
   };
 }]);
 app.controller('SearchCtrl', [
-  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'Repo', '$modal', 'localStorageService', 'growl',
-  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, Repo, $modal, localStorage, growl) {
+  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'Repo', '$modal', 'Bookmark', 'growl',
+  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, Repo, $modal, Bookmark, growl) {
   
   $scope.languages = PopularLanguages;
   $scope.selectedLanguage = $stateParams.language;
@@ -188,28 +220,17 @@ app.controller('SearchCtrl', [
   };
 
   $scope.bookmarkUser = function(data) {
-    var storageKey = 'bookmarkedUsers';
-    var bookmarkedUsers = localStorage.get(storageKey);
-    if (!bookmarkedUsers) {
-      bookmarkedUsers = '{}';
-    };
-    bookmarkedUsers = JSON.parse(bookmarkedUsers);
-    bookmarkedUsers[data.email] = data;
-
-    var newData = angular.toJson(bookmarkedUsers)
-    growl.success(newData);
-    localStorage.set(storageKey, newData);
+    Bookmark.addBookmark(data);
+    growl.success('Bookmarked!');
   };
 }]);
-app.controller('BookmarksCtrl', ['$scope', '$stateParams', 'localStorageService',
-  function($scope, $stateParams, localStorage) {
 
-  var bookmarks = localStorage.get('bookmarkedUsers');
-  if (!bookmarks) {
-    bookmarks = {};
-  }
-  $scope.bookmarks = angular.fromJson(bookmarks);
+app.controller('BookmarksCtrl', ['$scope', '$stateParams', 'Bookmark',
+  function($scope, $stateParams, Bookmark) {
+
+  $scope.bookmarks = Bookmark.getBookmarks();
 }]);
+
 app.controller('InboxCtrl', ['$scope', '$stateParams', 'GApi',
   function($scope, $stateParams, GApi) {
 

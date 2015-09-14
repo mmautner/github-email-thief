@@ -2,5 +2,8 @@
   "name": "ghjobs-ui",
   "root": "dist",
   "clean_urls": true,
-  "error_page": "error.html"
+  "error_page": "error.html",
+  "routes": {
+    "**": "index.html"
+  }
 }
