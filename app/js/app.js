@@ -150,13 +150,46 @@ app.controller('SearchCtrl', [
   function($scope, $state, $stateParams, PopularLanguages, RepoSearch, CodeSearch, UserSearch, Repo, $modal, Bookmark, growl) {
   
   $scope.languages = PopularLanguages;
-  $scope.selectedLanguage = $stateParams.language;
+  $scope.formData = {
+    selectedLanguage: $stateParams.language,
+    searchType: 'repos'
+  };
 
   $scope.refreshSearch = function() {
+    console.log('refreshing search');
     $scope.loaded = false;
     $scope.dynamic = 0;
-    RepoSearch.get({q: "language="+$scope.selectedLanguage}, function(data) {
+
+    // construct query string
+    var qry = [];
+    if ($scope.formData.searchQry) {
+      qry.push($scope.formData.searchQry);
+    }
+    if ($scope.formData.selectedLanguage) {
+      qry.push("language="+$scope.formData.selectedLanguage);
+    }
+    console.log(qry);
+    qry = qry.join('+');
+    console.log(qry);
+
+    var searchService;
+    switch ($scope.formData.searchType) {
+      case 'repos':
+        searchService = RepoSearch;
+        break;
+      case 'codes':
+        searchService = CodeSearch;
+        break;
+      case 'users':
+        searchService = UserSearch;
+        break;
+      default:
+        searchService = RepoSearch;
+    }
+
+    searchService.get({q: qry}, function(data) {
       $scope.loaded = true;
+      $scope.totalCount = data.total_count;
       $scope.items = data.items;
     });
     // increment progress bar 19% every .5s, stopping at <100
