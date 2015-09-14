@@ -2,9 +2,11 @@ var app = angular.module('scriptermail', [
   'ui.router',
   'ui.bootstrap',
   'ngResource',
+  'ngSanitize',
   'angular-google-gapi',
   'LocalStorageModule',
-  'angular-growl'
+  'angular-growl',
+  'ngCsv'
 ]);
 
 app.constant('BaseGHUrl', 'https://api.github.com');
@@ -228,6 +230,13 @@ app.controller('SearchCtrl', [
 app.controller('BookmarksCtrl', ['$scope', '$stateParams', 'Bookmark',
   function($scope, $stateParams, Bookmark) {
 
+  $scope.getArray = function() {
+    var log = [];
+    angular.forEach(Bookmark.getBookmarks(), function(value, key) {
+      this.push(value);
+    }, log);
+    return log;
+  };
   $scope.bookmarks = Bookmark.getBookmarks();
 }]);
 

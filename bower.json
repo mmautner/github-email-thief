@@ -24,6 +24,7 @@
     "fastclick": "~1.0.6",
     "angular-local-storage": "~0.2.2",
     "angular-ui-bootstrap-bower": "~0.13.4",
-    "angular-growl-v2": "~0.7.5"
+    "angular-growl-v2": "~0.7.5",
+    "ng-csv": "~0.3.4"
   }
 }
