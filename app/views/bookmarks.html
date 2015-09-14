@@ -1,4 +1,10 @@
-<ul>
+<button
+  type="button"
+  ng-csv="getArray()"
+  filename="test.csv">
+  Export
+</button>
+<ul class='list-unstyled'>
   <li ng-repeat="item in bookmarks">
     {{item}}
   </li>
