@@ -1,4 +1,4 @@
-var app = angular.module('ghjobs', [
+var app = angular.module('scriptermail', [
   'ui.router',
   'ui.bootstrap',
   'ngResource',
