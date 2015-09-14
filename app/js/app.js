@@ -1,9 +1,10 @@
-var app = angular.module('ghjobs', [
+var app = angular.module('scriptermail', [
   'ui.router',
   'ui.bootstrap',
   'ngResource',
   'angular-google-gapi',
-  'LocalStorageModule'
+  'LocalStorageModule',
+  'angular-growl'
 ]);
 
 app.constant('BaseGHUrl', 'https://api.github.com');
@@ -35,6 +36,20 @@ app.constant('PopularLanguages', [
   'TeX',
   'VimL',
 ]);
+
+app.config(['$locationProvider', function($locationProvider) {
+  $locationProvider.html5Mode(true);
+}]);
+
+app.config(['growlProvider', function(growlProvider) {
+  growlProvider.globalTimeToLive({
+    success: 1000,
+    error: 2000,
+    warning: 3000,
+    info: 4000
+  });
+  growlProvider.globalDisableIcons(true);
+}]);
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
@@ -68,52 +83,53 @@ app.config(['$stateProvider', '$urlRouterProvider',
         parent: 'base',
         templateUrl: "views/terms.html"
       })
-      .state('orgs', {
-        url: "/org",
+      .state('bookmarks', {
+        url: "/bookmarks",
         parent: 'base',
-        templateUrl: "views/org.html",
-        controller: "OrgCtrl"
-      })
-      .state('org', {
-        url: "/org/:org",
-        parent: 'base',
-        templateUrl: "views/org-detail.html",
-        controller: "OrgDetailCtrl"
-      })
-      .state('repos', {
-        url: "/repos",
-        parent: 'base',
-        templateUrl: "views/repos.html",
-        controller: "RepoCtrl"
-      })
-      .state('events', {
-        url: "/events",
-        parent: 'base',
-        templateUrl: "views/events.html",
-        controller: "EventCtrl"
+        templateUrl: "views/bookmarks.html",
+        controller: "BookmarksCtrl"
       });
   }
 ]);
 
 
 /** services **/
-app.service('Orgs', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
-  return $resource(BaseGHUrl + '/organizations');
-}]);
-app.service('Org', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
-  return $resource(BaseGHUrl + '/orgs/:org');
+app.service('RepoSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
+  return $resource(BaseGHUrl + '/search/repositories');
 }]);
 app.service('Repo', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/repos/:owner/:repo/:commits');
 }]);
-app.service('RepoSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
-  return $resource(BaseGHUrl + '/search/repositories');
-}]);
-app.service('Event', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
-  return $resource(BaseGHUrl + '/events');
-}]);
 app.service('Commit', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/repos/:owner/:repo/commits/:sha');
+}]);
+
+app.service('Bookmark', ['localStorageService', function(localStorage) {
+  var userBookmarksKey = 'bookmarkedUsers';
+
+  var addBookmark = function(data) {
+    var bookmarks = localStorage.get(userBookmarksKey);
+    if (!bookmarks) {
+      bookmarks = '{}';
+    }
+    bookmarks = angular.fromJson(bookmarks);
+    bookmarks[data.email] = data;
+
+    var newBookmarks = angular.toJson(bookmarks);
+    localStorage.set(userBookmarksKey, newBookmarks);
+    return data;
+  };
+  var getBookmarks = function() {
+    var bookmarks = localStorage.get(userBookmarksKey);
+    if (!bookmarks) {
+      bookmarks = '{}';
+    }
+    return angular.fromJson(bookmarks);
+  };
+  return {
+    addBookmark: addBookmark,
+    getBookmarks: getBookmarks
+  }
 }]);
 
 
@@ -151,8 +167,9 @@ app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'RepoSearch'
     $state.go('search', {language: lang});
   };
 }]);
-app.controller('SearchCtrl', ['$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'Repo', '$modal',
-  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, Repo, $modal) {
+app.controller('SearchCtrl', [
+  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'Repo', '$modal', 'Bookmark', 'growl',
+  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, Repo, $modal, Bookmark, growl) {
   
   $scope.languages = PopularLanguages;
   $scope.selectedLanguage = $stateParams.language;
@@ -201,24 +218,19 @@ app.controller('SearchCtrl', ['$scope', '$state', '$stateParams', 'PopularLangua
       });
     });
   };
-}]);
-app.controller('OrgCtrl', ['$scope', '$stateParams', 'Orgs',
-  function($scope, $stateParams, Orgs) {
-  $scope.orgs = Orgs.query();
-}]);
-app.controller('OrgDetailCtrl', ['$scope', '$stateParams', 'Org',
-  function($scope, $stateParams, Org) {
 
-  $scope.org = Org.get({org: $stateParams.org});
+  $scope.bookmarkUser = function(data) {
+    Bookmark.addBookmark(data);
+    growl.success('Bookmarked!');
+  };
 }]);
-app.controller('RepoCtrl', ['$scope', '$stateParams', 'RepoSearch',
-  function($scope, $stateParams, RepoSearch) {
-  $scope.repos = RepoSearch.get({q: "language=python"});
+
+app.controller('BookmarksCtrl', ['$scope', '$stateParams', 'Bookmark',
+  function($scope, $stateParams, Bookmark) {
+
+  $scope.bookmarks = Bookmark.getBookmarks();
 }]);
-app.controller('EventCtrl', ['$scope', '$stateParams', 'Event',
-  function($scope, $stateParams, Event) {
-  $scope.events = Event.query();
-}]);
+
 app.controller('InboxCtrl', ['$scope', '$stateParams', 'GApi',
   function($scope, $stateParams, GApi) {
 

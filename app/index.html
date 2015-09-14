@@ -1,11 +1,13 @@
-<html ng-app='ghjobs'>
+<html ng-app='scriptermail'>
 <head>
   <title>ScripterMail</title>
+  <base href="/"> <!-- required for angular html5mode support -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- build:css css/vendor.css -->
   <link rel="stylesheet" href="bower/bootstrap/dist/css/bootstrap.css">
   <link rel="stylesheet" href="bower/font-awesome/css/font-awesome.css">
+  <link rel="stylesheet" href="bower/angular-growl-v2/build/angular-growl.css">
   <!-- endbuild -->
 
   <!-- build:css css/main.css -->
@@ -28,8 +30,18 @@
   <script src="bower/angular-ui-bootstrap-bower/ui-bootstrap-tpls.js"></script>
   <script src="bower/angular-google-gapi/angular-google-gapi.js"></script>
   <script src="bower/angular-local-storage/dist/angular-local-storage.js"></script>
+  <script src="bower/angular-growl-v2/build/angular-growl.js"></script>
   <script src="bower/fastclick/lib/fastclick.js"></script>
   <!-- endbuild -->
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', window.__env.GOOGLE_ANALYTICS_ID, 'auto');
+    ga('send', 'pageview');
+  </script>
 </head>
 <body>
   <div ui-view></div>

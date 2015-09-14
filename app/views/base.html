@@ -14,9 +14,8 @@
     </div>
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1"  data-toggle="collapse" data-target=".navbar-collapse">
       <ul class="nav navbar-nav">
-        <li><a ui-sref="orgs">Orgs</a></li>
-        <li><a ui-sref="events">Events</a></li>
-        <li><a ui-sref="repos">Repos</a></li>
+        <li><a ui-sref-active="active" ui-sref="search">Search</a></li>
+        <li><a ui-sref-active="active" ui-sref="bookmarks">Bookmarks</a></li>
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
@@ -28,7 +27,12 @@
   </div>
 </header>
 <div class="container">
+
+  <!-- flash messages -->
+  <div growl></div>
+
   <div ui-view></div>
+
 </div>
 <footer class="footer text-center">
   <div class="container">
