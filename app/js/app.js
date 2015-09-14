@@ -3,7 +3,7 @@ var app = angular.module('scriptermail', [
   'ui.bootstrap',
   'ngResource',
   'ngSanitize',
-  'angular-google-gapi',
+  //'angular-google-gapi',
   'LocalStorageModule',
   'angular-growl',
   'ngCsv'
@@ -74,12 +74,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
         templateUrl: "views/search.html",
         controller: "SearchCtrl"
       })
-      .state('inbox', {
-        url: '/inbox',
-        parent: 'base',
-        templateUrl: "views/inbox.html",
-        controller: "InboxCtrl"
-      })
       .state('terms', {
         url: "/terms",
         parent: 'base',
@@ -98,6 +92,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
 /** services **/
 app.service('RepoSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/search/repositories');
+}]);
+app.service('CodeSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
+  return $resource(BaseGHUrl + '/search/code');
+}]);
+app.service('UserSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
+  return $resource(BaseGHUrl + '/search/users');
 }]);
 app.service('Repo', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/repos/:owner/:repo/:commits');
@@ -136,31 +136,7 @@ app.service('Bookmark', ['localStorageService', function(localStorage) {
 
 
 /** controllers **/
-app.controller('BaseCtrl', ['GAuth', 'GApi', '$rootScope', '$state',
-  function(GAuth, GApi, $rootScope, $state) {
-
-  GAuth.checkAuth().then(function () {
-    $rootScope.isLoggedIn = true;
-  }, function() {
-    $rootScope.isLoggedIn = false;
-  });
-
-  $rootScope.signOut = function() {
-    GAuth.logout().then(function() {
-      $rootScope.isLoggedIn = false;
-      $state.go('home');
-    });
-  };
-
-  $rootScope.doSignup = function() {
-    GAuth.login().then(function(){
-      $state.go('inbox');
-    }, function() {
-      console.log('login fail');
-    });
-  };
-
-}]);
+app.controller('BaseCtrl', [function() { }]);
 app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'RepoSearch',
   function($scope, $state, PopularLanguages, RepoSearch) {
 
@@ -170,8 +146,8 @@ app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'RepoSearch'
   };
 }]);
 app.controller('SearchCtrl', [
-  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'Repo', '$modal', 'Bookmark', 'growl',
-  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, Repo, $modal, Bookmark, growl) {
+  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'CodeSearch', 'UserSearch', 'Repo', '$modal', 'Bookmark', 'growl',
+  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, CodeSearch, UserSearch, Repo, $modal, Bookmark, growl) {
   
   $scope.languages = PopularLanguages;
   $scope.selectedLanguage = $stateParams.language;
@@ -240,34 +216,6 @@ app.controller('BookmarksCtrl', ['$scope', '$stateParams', 'Bookmark',
   $scope.bookmarks = Bookmark.getBookmarks();
 }]);
 
-app.controller('InboxCtrl', ['$scope', '$stateParams', 'GApi',
-  function($scope, $stateParams, GApi) {
-
-  GApi.executeAuth('gmail', 'users.threads.list', {userId: 'me'})
-  .then(function(resp) {
-    $scope.response = resp;
-  }, function(data) {
-    console.log("error :(");
-    $scope.response = data;
-  });
-
-}]);
-
-app.run(['GAuth', 'GApi', 'GmailScope', 'GoogleClientId', '$state', '$rootScope',
-  function(GAuth, GApi, GmailScope, GoogleClientId, $state, $rootScope) {
-
-  GApi.load('gmail', 'v1');
-  GAuth.setScope(GmailScope);
-  GAuth.setClient(GoogleClientId);
-  /*
-  GAuth.checkAuth().then(function () {
-    $rootScope.isLoggedIn = true;
-    $state.go('inbox');
-  }, function() {
-    $rootScope.isLoggedIn = false;
-    $state.go('home');
-  });
-  */
-
+app.run([function() {
   FastClick.attach(document.body);
 }]);
