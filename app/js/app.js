@@ -69,7 +69,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
         controller: "HomeCtrl"
       })
       .state('search', {
-        url: "/search/:language",
+        url: "/search/?language&page&searchType",
         parent: 'base',
         templateUrl: "views/search.html",
         controller: "SearchCtrl"
@@ -91,7 +91,19 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 /** services **/
 app.service('RepoSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
-  return $resource(BaseGHUrl + '/search/repositories');
+  return $resource(BaseGHUrl + '/search/repositories',
+    {},
+    {
+      get: {
+        method: 'GET',
+        transformResponse: function(data, headers){
+            response = {}
+            response.data = angular.fromJson(data);
+            response.headers = headers();
+            return response;
+        }
+      }
+    });
 }]);
 app.service('CodeSearch', ['$resource', 'BaseGHUrl', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/search/code');
@@ -133,6 +145,26 @@ app.service('Bookmark', ['localStorageService', function(localStorage) {
     getBookmarks: getBookmarks
   }
 }]);
+app.service('range', function() {
+  // http://stackoverflow.com/a/8273091/468653
+  return function(start, stop, step) {
+    if (typeof stop == 'undefined') {
+      stop = start;
+      start = 0;
+    }
+    if (typeof step == 'undefined') {
+      step = 1;
+    }
+    if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
+      return [];
+    }
+    var result = [];
+    for (var i = start; step > 0 ? i < stop : i > stop; i += step) {
+      result.push(i);
+    }
+    return result;
+  };
+});
 
 
 /** controllers **/
@@ -142,25 +174,74 @@ app.controller('HomeCtrl', ['$scope', '$state', 'PopularLanguages', 'RepoSearch'
 
   $scope.languages = PopularLanguages;
   $scope.goToSearch = function(lang) {
-    $state.go('search', {language: lang});
+    $state.go('search', {
+      searchType: 'repos',
+      page: 1,
+      language: lang
+    });
   };
 }]);
 app.controller('SearchCtrl', [
-  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'CodeSearch', 'UserSearch', 'Repo', '$modal', 'Bookmark', 'growl',
-  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, CodeSearch, UserSearch, Repo, $modal, Bookmark, growl) {
+  '$scope', '$state', '$stateParams', 'PopularLanguages', 'RepoSearch', 'CodeSearch', 'UserSearch', 'Repo', '$modal', 'Bookmark', 'growl', 'range',
+  function($scope, $state, $stateParams, PopularLanguages, RepoSearch, CodeSearch, UserSearch, Repo, $modal, Bookmark, growl, range) {
   
   $scope.languages = PopularLanguages;
-  $scope.selectedLanguage = $stateParams.language;
+  $scope.formData = {
+    selectedLanguage: $stateParams.language,
+    page: parseInt($stateParams.page),
+    searchType: $stateParams.searchType
+  };
 
-  $scope.refreshSearch = function() {
-    $scope.loaded = false;
-    $scope.dynamic = 0;
-    RepoSearch.get({q: "language="+$scope.selectedLanguage}, function(data) {
-      $scope.loaded = true;
-      $scope.items = data.items;
+  $scope.range = range;
+
+  $scope.newSearch = function() {
+    $state.go('search', {
+      language: $scope.formData.selectedLanguage,
+      page: 1,
+      searchType: $scope.formData.searchType
     });
-    // increment progress bar 19% every .5s, stopping at <100
-    $scope.dynamic = 10;
+  };
+
+  $scope.refreshSearch = function(clearPageNumber) {
+    console.log('refreshing search');
+
+    // construct query string
+    var qry = [];
+    if ($scope.formData.selectedLanguage) {
+      qry.push("language="+$scope.formData.selectedLanguage);
+    }
+    if ($scope.formData.searchQry) {
+      qry.push($scope.formData.searchQry);
+    }
+    qry = qry.join('+');
+
+    var searchService;
+    switch ($scope.formData.searchType) {
+      case 'repos':
+        searchService = RepoSearch;
+        break;
+      case 'codes':
+        searchService = CodeSearch;
+        break;
+      case 'users':
+        searchService = UserSearch;
+        break;
+      default:
+        searchService = RepoSearch;
+    }
+
+    var qryArgs = {
+      q: qry
+    };
+    if ($stateParams.page) {
+      qryArgs.page = $stateParams.page;
+    }
+    searchService.get(qryArgs, function(response) {
+      $scope.data = response.data;
+      $scope.headers = response.headers;
+      var maxResults = Math.min($scope.data.total_count, 1000);
+      $scope.numOfPages = Math.ceil(maxResults/$scope.data.items.length);
+    });
   };
 
   $scope.refreshSearch();

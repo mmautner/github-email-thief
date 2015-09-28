@@ -1,57 +1,103 @@
 <div class="row">
   <div class="col-lg-12">
-    <h3>Pick a programming language:</h3>
-    <div class="form-group">
-      <select
-        style="width: 160px; font-size: 1.5em;"
-        ng-options="value for value in languages"
-        ng-change="refreshSearch()"
-        ng-model="selectedLanguage">
-      </select>
-    </div>
-    <div ng-show="!loaded">
-      <progressbar value="dynamic"></progressbar>
-    </div>
-    <div class="form-group"
-      ng-show="selectedLanguage && loaded"
-      ng-change="loadResuls()"
-      ng-model="selectedType">
-      <h3>Find prospects by:</h3>
-      <label class="radio-inline">
-        <input type="radio" ng-value="true" ng-change="refreshSearch()" ng-model="formData.people"> People
-      </label>
-      <label class="radio-inline">
-        <input type="radio" ng-value="false" ng-change="refreshSearch()" ng-model="formData.org"> Organizations
-      </label>
-      <label class="radio-inline">
-        <input type="radio" ng-value="false" ng-change="refreshSearch()" ng-model="formData.repos"> Repositories
-      </label>
-      <label class="radio-inline">
-        <input type="radio" ng-value="false" ng-change="refreshSearch()" ng-model="formData.events"> Events
-      </label>
+    <div class="search-box">
+      <div class="form-group">
+        <h2>Search:</h2>
+        <label class="radio-inline">
+          <input
+            type="radio"
+            value="repos"
+            ng-change="newSearch()"
+            ng-model="formData.searchType">
+            Repos
+        </label>
+        <label class="radio-inline">
+          <input
+            type="radio"
+            value="codes"
+            ng-change="newSearch()"
+            ng-model="formData.searchType">
+            Code
+        </label>
+        <label class="radio-inline">
+          <input
+            type="radio"
+            value="users"
+            ng-change="newSearch()"
+            ng-model="formData.searchType">
+            Users
+        </label>
+      </div>
+      <h3>Pick a programming language:</h3>
+      <div class="form-group">
+        <select
+          style="width: 160px; font-size: 1.5em;"
+          ng-options="value for value in languages"
+          ng-change="newSearch()"
+          ng-model="formData.selectedLanguage">
+        </select>
+      </div>
+      <div class="form-inline" ng-show="formData.selectedLanguage">
+        <div class="form-group">
+          <input
+            type="text"
+            ng-model="formData.searchQry"
+            class="form-control">
+        </div>
+        <button
+          type="submit"
+          ng-click="newSearch()"
+          class="btn btn-default">
+          Submit
+        </button>
+      </div>
     </div>
   </div>
 </div>
+<hr>
 <div class="row">
   <div class="col-lg-12">
-    <table class="table table-bordered table-hover table-condensed">
-      <thead>
-        <tr>
-          <th>Repo</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr ng-repeat="item in items">
-          <td>{{item.full_name}}</td>
-          <td>
-            <button
-              class="btn btn-info"
-              ng-click="searchEmail(item.owner.login, item.name)">
-              Identify Email
-            </button>
-          </td>
-        </tr>
-      </tbody>
+    <div ng-show="data.items">
+      <table class="table table-bordered table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>Repo</th>
+            <th>{{data.total_count}} results</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="item in data.items">
+            <td>{{item.full_name}}</td>
+            <td>
+              <button
+                class="btn btn-info"
+                ng-click="searchEmail(item.owner.login, item.name)">
+                Identify Email
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ul class="pagination">
+        <li ui-sref-active="active">
+          <a ui-sref="search({page: 1})">
+            First
+          </a>
+        </li>
+        <li ng-repeat="idx in range(numOfPages) | limitTo:10 track by $index" ui-sref-active="active">
+          <a ui-sref="search({page: $index+1})">
+            {{$index+1}}
+          </a>
+        </li>
+        <li ng-show="numOfPages > 10">
+          <a ui-sref="search({page: numOfPages})">
+            Last
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div ng-show="!data.items">
+      <p>No results</p>
+    </div>
   </div>
 </div>
