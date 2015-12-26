@@ -16,6 +16,11 @@ gulp.task('copy', ['clean'], function() {
     ], {'base': 'app'})
     .pipe(gulp.dest('./dist/'));
 });
+gulp.task('ngAnnotate', ['copy'], function() {
+  return gulp.src('dist/js/app.js')
+    .pipe(plugins.ngAnnotate())
+    .pipe(gulp.dest('dist/js/'));
+});
 
 gulp.task('copyFonts', ['clean'], function() {
   return gulp.src('app/bower/**/{,*/}*.{woff,woff2,eot,svg,ttf,otf}')
@@ -60,6 +65,7 @@ gulp.task('surge200', ['inject_env'], function() {
 gulp.task('build', [
   'copyFonts',
   'copy',
+  'ngAnnotate',
   'inject_env',
   'vendor_js',
   'main_css',
