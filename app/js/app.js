@@ -1,4 +1,4 @@
-var app = angular.module('scriptermail', [
+var app = angular.module('github-email-thief', [
   'ui.router',
   'ui.bootstrap',
   'ngResource',
@@ -9,7 +9,6 @@ var app = angular.module('scriptermail', [
 ]);
 
 app.constant('BaseGHUrl', 'https://api.github.com');
-app.constant('GmailScope', 'https://mail.google.com/');
 app.constant('PopularLanguages', [
   'JavaScript',
   'Python',
