@@ -3,7 +3,6 @@ var app = angular.module('scriptermail', [
   'ui.bootstrap',
   'ngResource',
   'ngSanitize',
-  //'angular-google-gapi',
   'LocalStorageModule',
   'angular-growl',
   'ngCsv'
@@ -11,7 +10,6 @@ var app = angular.module('scriptermail', [
 
 app.constant('BaseGHUrl', 'https://api.github.com');
 app.constant('GmailScope', 'https://mail.google.com/');
-app.constant('GoogleClientId', __env.GOOGLE_CLIENT_ID);
 app.constant('PopularLanguages', [
   'JavaScript',
   'Python',

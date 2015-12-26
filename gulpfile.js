@@ -1,54 +1,80 @@
 var gulp = require('gulp');
-var usemin = require('gulp-usemin');
-var uglify = require('gulp-uglify');
-var minifyHtml = require('gulp-minify-html');
-var minifyCss = require('gulp-minify-css');
-var rev = require('gulp-rev');
-var clean = require('gulp-clean');
-var flatten = require('gulp-flatten');
-
+var plugins = require('gulp-load-plugins')();
+var mainBowerFiles = require('main-bower-files');
 
 gulp.task('clean', function() {
   return gulp.src('./dist/', {read: false})
-    .pipe(clean());
+    .pipe(plugins.clean());
 });
 
-gulp.task('copyFonts', ['clean'], function() {
-  return gulp.src('app/bower/**/{,*/}*.{woff,woff2,eot,svg,ttf,otf}')
-    .pipe(flatten())
-    .pipe(gulp.dest('./dist/fonts'));
-});
-
-gulp.task('copy', ['copyFonts'], function() {
+gulp.task('copy', ['clean'], function() {
   return gulp.src([
-    './app/css/**/*',
-    './app/img/**/*',
-    './app/views/**/*',
+      'app/img/**/*',
+      'app/views/**/*',
+      'app/js/**/*',
     ], {'base': 'app'})
     .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('usemin', ['copy'], function() {
-  return gulp.src('./app/index.html')
-    .pipe(usemin({
-      //css: [ minifyCss(), rev() ],
-      //html: [ minifyHtml({ empty: true }) ],
-      js: [ uglify(), rev() ],
-      //appjs: [ uglify(), rev() ],
-    }))
+gulp.task('copyFonts', ['clean'], function() {
+  return gulp.src('app/bower/**/{,*/}*.{woff,woff2,eot,svg,ttf,otf}')
+    .pipe(plugins.flatten())
+    .pipe(gulp.dest('dist/fonts'));
+});
+
+gulp.task('inject_env', ['clean'], function() {
+  return gulp.src('app/index.html')
+    .pipe(plugins.replace(
+      /\$GOOGLE_ANALYTICS_ID/, '"' + process.env.GOOGLE_ANALYTICS_ID + '"'
+    ))
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('default', ['usemin']);
-
-// https://docs.divshot.com/integrations/gulp
-gulp.task('server', function(cb) {
-   var spawn = require('child_process').spawn;
-   var log = function(data){ console.log("[Divshot] " + data.toString().trim()); }
-
-   var server = spawn('divshot', ['server', '--port', '3474']);
-
-   server.on('error', function(error) { console.log(error.stack) });
-   server.stdout.on('data', log);
-   server.stderr.on('data', log);
+gulp.task('main_css', ['clean'], function() {
+  return gulp.src('app/css/*.css')
+    .pipe(plugins.sourcemaps.init())
+    .pipe(plugins.concat('main.css'))
+    .pipe(plugins.sourcemaps.write())
+    .pipe(gulp.dest('dist/css/'));
 });
+
+gulp.task('vendor_js', ['clean'], function() {
+  return gulp.src(mainBowerFiles(['**/*.js']))
+    .pipe(plugins.concat('vendor.js'))
+    .pipe(gulp.dest('dist/js/'));
+});
+
+gulp.task('vendor_css', ['clean'], function() {
+  return gulp.src(mainBowerFiles(['**/*.css']))
+    .pipe(plugins.concat('vendor.css'))
+    .pipe(gulp.dest('dist/css/'));
+});
+
+gulp.task('build', [
+  'copyFonts',
+  'copy',
+  'inject_env',
+  'vendor_js',
+  'main_css',
+  'vendor_css',
+]);
+
+gulp.task('connect', ['build'], function() {
+  plugins.connect.server({
+    root: 'dist',
+    port: 3474,
+    livereload: true
+  });
+});
+
+gulp.task('html', function() {
+  gulp.src('./app/*.html')
+    .pipe(plugins.connect.reload());
+});
+
+gulp.task('watch', function() {
+  gulp.watch(['./app/*.html'], ['html']);
+});
+
+gulp.task('default', ['connect', 'watch']);
+
