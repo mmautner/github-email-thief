@@ -1,6 +1,7 @@
 var gulp = require('gulp');
 var plugins = require('gulp-load-plugins')();
 var mainBowerFiles = require('main-bower-files');
+var history = require('connect-history-api-fallback');
 
 gulp.task('clean', function() {
   return gulp.src('./dist/', {read: false})
@@ -50,6 +51,12 @@ gulp.task('vendor_css', ['clean'], function() {
     .pipe(gulp.dest('dist/css/'));
 });
 
+gulp.task('surge200', ['inject_env'], function() {
+  return gulp.src(['dist/index.html' ], {'base': 'dist'})
+    .pipe(plugins.rename('200.html'))
+    .pipe(gulp.dest('./dist/'));
+});
+
 gulp.task('build', [
   'copyFonts',
   'copy',
@@ -57,13 +64,17 @@ gulp.task('build', [
   'vendor_js',
   'main_css',
   'vendor_css',
+  'surge200'
 ]);
 
 gulp.task('connect', ['build'], function() {
   plugins.connect.server({
     root: 'dist',
     port: 3474,
-    livereload: true
+    livereload: true,
+    middleware: function(connect, opt) {
+      return [history()];
+    }
   });
 });
 
