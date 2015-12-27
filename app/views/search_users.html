@@ -1,11 +1,3 @@
-<h3>Pick a programming language:</h3>
-<div class="form-group">
-  <select style="width: 160px; font-size: 1.5em;"
-    ng-options="value for value in languages"
-    ng-change="refreshSearch()"
-    ng-model="formData.language">
-  </select>
-</div>
 <div>
   <h3>Text Query:</h3>
   <div class="form-inline">
@@ -21,6 +13,14 @@
     </button>
   </div>
 </div>
+<h3>Pick a programming language:</h3>
+<div class="form-group">
+  <select style="width: 160px; font-size: 1.5em;"
+    ng-options="value for value in languages"
+    ng-change="refreshSearch()"
+    ng-model="formData.language">
+  </select>
+</div>
 <hr>
 <div class="row">
   <div class="col-lg-12">
@@ -34,11 +34,11 @@
         </thead>
         <tbody>
           <tr ng-repeat="item in data.items">
-            <td>{{item.full_name}}</td>
+            <td><a ng-href="{{item.html_url}}">{{item.login}}</a></td>
             <td>
               <button
                 class="btn btn-info"
-                ng-click="searchEmail(item.owner.login, item.name)">
+                ng-click="searchEmailByUser(item.login)">
                 Identify Email
               </button>
             </td>

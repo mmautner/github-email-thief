@@ -40,6 +40,25 @@ app.config(function($locationProvider) {
   $locationProvider.html5Mode(true);
 });
 
+// http://stackoverflow.com/a/23087400/468653
+app.config(function($httpProvider) {
+  $httpProvider.interceptors.push(function($q) {
+    var realEncodeURIComponent = window.encodeURIComponent;
+    return {
+      'request': function(config) {
+         window.encodeURIComponent = function(input) {
+           return realEncodeURIComponent(input).split("%2B").join("+"); 
+         }; 
+         return config || $q.when(config);
+      },
+      'response': function(config) {
+         window.encodeURIComponent = realEncodeURIComponent;
+         return config || $q.when(config);
+      }
+    };
+  });
+});
+
 app.config(function(growlProvider) {
   growlProvider.globalTimeToLive({
     success: 1000,
@@ -81,7 +100,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
         controller: "SearchCodesCtrl"
       })
       .state('search.users', {
-        url: "/users?language&page",
+        url: "/users?language&page&query",
         templateUrl: "views/search_users.html",
         controller: "SearchUsersCtrl"
       })
@@ -121,6 +140,9 @@ app.service('CodeSearch', function($resource, BaseGHUrl) {
 });
 app.service('UserSearch', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/search/users');
+});
+app.service('UserRepo', function($resource, BaseGHUrl) {
+  return $resource(BaseGHUrl + '/users/:owner/repos');
 });
 app.service('Repo', function($resource, BaseGHUrl) {
   return $resource(BaseGHUrl + '/repos/:owner/:repo/:commits');
@@ -184,15 +206,14 @@ app.controller('HomeCtrl', function($scope, $state, PopularLanguages) {
 
   $scope.languages = PopularLanguages;
   $scope.goToSearch = function(lang) {
-    $state.go('search', {
-      searchType: 'repos',
+    $state.go('search.repos', {
       page: 1,
       language: lang
     });
   };
 });
 
-app.controller('SearchCtrl', function($scope, $modal, PopularLanguages, Repo, Bookmark, growl) {
+app.controller('SearchCtrl', function($scope, $modal, PopularLanguages, Repo, UserRepo, Bookmark, growl) {
 
   var uniqueEmails = function(results) {
     var s = new Set();
@@ -223,6 +244,16 @@ app.controller('SearchCtrl', function($scope, $modal, PopularLanguages, Repo, Bo
         windowClass: 'app-modal-window',
         templateUrl: 'views/result-modal.html'
       });
+    });
+  };
+
+  $scope.searchEmailByUser = function(owner) {
+    UserRepo.query({owner: owner}, function(data) {
+      if (data.length) {
+        $scope.searchEmail(owner, data[0].name);
+      } else {
+        growl.error('No repos found for ' + owner);
+      };
     });
   };
 
@@ -314,7 +345,7 @@ app.controller('SearchUsersCtrl', function($scope, $state, $stateParams, Popular
   $scope.range = range;
   $scope.refreshSearch = function() {
     $scope.formData.page = 1;
-    $state.go("search.codes", $scope.formData);
+    $state.go("search.users", $scope.formData);
   };
 
   function refresh() {
@@ -322,7 +353,6 @@ app.controller('SearchUsersCtrl', function($scope, $state, $stateParams, Popular
     if ($scope.formData.query) {
       qry.push($scope.formData.query);
     }
-    qry.push("in:file");
     if ($scope.formData.language) {
       qry.push("language:"+$scope.formData.language);
     }
@@ -331,8 +361,8 @@ app.controller('SearchUsersCtrl', function($scope, $state, $stateParams, Popular
       q: qry,
       page: $scope.formData.page
     }, function(response) {
-      $scope.data = response.data;
-      $scope.headers = response.headers;
+      $scope.data = response;
+      //$scope.headers = response.headers;
       var maxResults = Math.min($scope.data.total_count, 1000);
       $scope.numOfPages = Math.ceil(maxResults/$scope.data.items.length);
     });
