@@ -17,7 +17,15 @@
               <td>{{author.name}}</td>
               <td><b>{{author.email}}</b></td>
               <td>{{author.login}}</td>
-              <td><button ng-click="bookmarkUser(author)" class="btn btn-default">Bookmark</button></td>
+              <td>
+                <button
+                  analytics-on="click"
+                  analytics-event="Bookmark Email"
+                  ng-click="bookmarkUser(author)"
+                  class="btn btn-default">
+                  Bookmark
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>

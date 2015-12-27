@@ -38,6 +38,8 @@
             <td>{{item.full_name}}</td>
             <td>
               <button
+                analytics-on="click"
+                analytics-event="Identify Email from Code Search"
                 class="btn btn-info"
                 ng-click="searchEmail(item.owner.login, item.name)">
                 Identify Email

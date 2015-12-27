@@ -5,7 +5,9 @@ var app = angular.module('github-email-thief', [
   'ngSanitize',
   'LocalStorageModule',
   'angular-growl',
-  'ngCsv'
+  'ngCsv',
+  'angulartics',
+  'angulartics.google.analytics'
 ]);
 
 app.constant('BaseGHUrl', 'https://api.github.com');

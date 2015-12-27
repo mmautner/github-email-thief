@@ -9,6 +9,8 @@
       <div class="form-group">
         <select
           style="width: 160px; font-size: 1.5em;"
+          analytics-on="click"
+          analytics-event="HomepageSearch"
           ng-options="value for value in languages"
           ng-model="selectedLanguage"
           ng-change="goToSearch(selectedLanguage)">

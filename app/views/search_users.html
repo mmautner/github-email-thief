@@ -37,6 +37,8 @@
             <td><a ng-href="{{item.html_url}}">{{item.login}}</a></td>
             <td>
               <button
+                analytics-on="click"
+                analytics-event="Identify Email from User Search"
                 class="btn btn-info"
                 ng-click="searchEmailByUser(item.login)">
                 Identify Email
