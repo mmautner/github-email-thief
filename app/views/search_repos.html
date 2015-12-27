@@ -1,0 +1,70 @@
+<h3>Pick a programming language:</h3>
+<div class="form-group">
+  <select style="width: 160px; font-size: 1.5em;"
+    ng-options="value for value in languages"
+    ng-change="refreshSearch()"
+    ng-model="formData.language">
+  </select>
+</div>
+<div ng-show="formData.language">
+  <h3>Description:</h3>
+  <div class="form-inline">
+    <div class="form-group">
+      <input type="text"
+        ng-model="formData.query"
+        class="form-control">
+    </div>
+    <button type="submit"
+      ng-click="refreshSearch()"
+      class="btn btn-default">
+      Submit
+    </button>
+  </div>
+</div>
+<hr>
+<div class="row">
+  <div class="col-lg-12">
+    <div ng-show="data.items">
+      <table class="table table-bordered table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>Repo</th>
+            <th>{{data.total_count}} results</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="item in data.items">
+            <td>{{item.full_name}}</td>
+            <td>
+              <button
+                class="btn btn-info"
+                ng-click="searchEmail(item.owner.login, item.name)">
+                Identify Email
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ul class="pagination">
+        <li ui-sref-active="active">
+          <a ui-sref="search.repos({page: 1})">
+            First
+          </a>
+        </li>
+        <li ng-repeat="idx in range(numOfPages) | limitTo:10 track by $index" ui-sref-active="active">
+          <a ui-sref="search.repos({page: $index+1})">
+            {{$index+1}}
+          </a>
+        </li>
+        <li ng-show="numOfPages > 10">
+          <a ui-sref="search.repos({page: numOfPages})">
+            Last
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div ng-show="!data.items">
+      <p>No results</p>
+    </div>
+  </div>
+</div>
