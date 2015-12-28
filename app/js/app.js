@@ -236,26 +236,50 @@ app.controller('SearchCtrl', function($scope, $modal, PopularLanguages, Repo, Us
     return x;
   };
 
+  var openResultsModal = function(data) {
+    $scope.authors = uniqueEmails(data);
+    $modal.open({
+      scope: $scope,
+      show: true,
+      size: 'lg',
+      windowClass: 'app-modal-window',
+      templateUrl: 'views/result-modal.html'
+    });
+  };
+
   $scope.searchEmail = function(owner, repo) {
     Repo.query({owner: owner, repo: repo, commits: 'commits'}, function(data) {
-      $scope.authors = uniqueEmails(data);
-      $modal.open({
-        scope: $scope,
-        show: true,
-        size: 'lg',
-        windowClass: 'app-modal-window',
-        templateUrl: 'views/result-modal.html'
-      });
+      openResultsModal(data);
+    }, function() {
+      growl.error('There was an error retrieving commit data for this repo');
+    });
+  };
+
+  var recursionDepth = 0;
+  var MAX_RECURSION_DEPTH = 5;
+  var checkReposForCommits = function(owner, repos) {
+    if (recursionDepth >= MAX_RECURSION_DEPTH || recursionDepth > repos.length) {
+      growl.error('Could not find a repository with sufficient commit data');
+    };
+    var repo = repos[recursionDepth];
+    Repo.query({owner: owner, repo: repo.name, commits: 'commits'}, function(data) {
+      openResultsModal(data);
+    }, function() {
+      recursionDepth++;
+      checkReposForCommits(owner, repos);
     });
   };
 
   $scope.searchEmailByUser = function(owner) {
+    recursionDepth = 0;
     UserRepo.query({owner: owner}, function(data) {
       if (data.length) {
-        $scope.searchEmail(owner, data[0].name);
+        checkReposForCommits(owner, data);
       } else {
         growl.error('No repos found for ' + owner);
       };
+    }, function() {
+      growl.error("Error encountered in fetching "+owner+"'s list of Github repos");
     });
   };
 
